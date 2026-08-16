@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sazonalidade">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0C2340">
+<title>Sazonalidade dos Mercados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0C2340;
+    --navy-2:#16324F;
+    --paper:#F6F4EE;
+    --card:#FFFFFF;
+    --ink:#1B2430;
+    --muted:#6B7280;
+    --green:#0F6E56;
+    --green-bg:#EAF3DE;
+    --gold:#C9A24B;
+    --gold-bg:#FBF1DC;
+    --line:#E7E3D8;
+    --red:#A32D2D;
+    --red-bg:#F6E7E4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:48px;
+  }
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff;
+    padding:calc(env(safe-area-inset-top) + 18px) 20px 16px;
+    box-shadow:0 6px 18px rgba(12,35,64,0.18);
+  }
+  .eyebrow{
+    font-family:'Roboto Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 4px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:25px;
+    margin:0 0 2px;
+    letter-spacing:-0.01em;
+  }
+  .updated{
+    font-size:12.5px;
+    color:#C7D2E0;
+    margin:6px 0 14px;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    background:rgba(255,255,255,0.08);
+    color:#DCE4EE;
+    border:1px solid rgba(255,255,255,0.14);
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background .15s ease, color .15s ease;
+  }
+  .tab.active{
+    background:var(--gold);
+    color:#25200F;
+    border-color:var(--gold);
+  }
+
+  main{max-width:900px; margin:0 auto; padding:18px 16px 0;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .group{margin-bottom:26px;}
+  .group-title{
+    font-family:'Fraunces',serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--navy);
+    margin:0 0 10px 2px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .group-title .count{
+    font-family:'Roboto Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    font-weight:500;
+    background:#EDEAE0;
+    padding:2px 7px;
+    border-radius:999px;
+  }
+  .group-sub{font-size:12.5px; color:var(--muted); margin:-4px 0 12px 2px; line-height:1.5;}
+
+  .grid{display:grid; grid-template-columns:1fr; gap:10px;}
+  @media (min-width:640px){ .grid{grid-template-columns:1fr 1fr;} h1{font-size:29px;} }
+  @media (min-width:900px){ .grid.months{grid-template-columns:1fr 1fr 1fr;} }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px 15px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card.today-flag::before{
+    content:"MÊS ATUAL";
+    position:absolute; top:0; right:0;
+    font-family:'Roboto Mono',monospace;
+    font-size:9px; font-weight:700; letter-spacing:.06em;
+    background:var(--navy); color:#fff;
+    padding:4px 9px 4px 11px;
+    border-bottom-left-radius:10px;
+  }
+
+  /* ---- Resumo: hero ---- */
+  .hero-card{padding:20px 18px 18px;}
+  .hero-top{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;}
+  .hero-month{font-family:'Fraunces',serif; font-weight:700; font-size:25px; color:var(--navy);}
+  .badge{font-family:'Roboto Mono',monospace; font-size:10px; font-weight:700; padding:5px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap;}
+  .badge-strong{background:var(--green-bg); color:var(--green);}
+  .badge-good{background:var(--green-bg); color:var(--green); opacity:0.85;}
+  .badge-neutral{background:#EDEAE0; color:var(--muted);}
+  .badge-weak{background:var(--red-bg); color:var(--red);}
+  .hero-stats{display:flex; gap:26px; margin:12px 0 12px; padding-top:12px; border-top:1px dashed var(--line);}
+  .hero-stat .num{font-family:'Roboto Mono',monospace; font-size:21px; font-weight:600;}
+  .hero-stat .lbl{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:2px;}
+  .hero-note{font-size:13px; color:var(--muted); line-height:1.55;}
+
+  /* ---- pulse bar ---- */
+  .pulse-wrap{margin:2px 0 18px;}
+  .pulse-label{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; font-family:'Roboto Mono',monospace;}
+  .pulse-bar{display:flex; gap:2px; height:30px; border-radius:6px; overflow:hidden;}
+  .pulse-seg{flex:1; position:relative;}
+  .pulse-seg.strong{background:var(--green);}
+  .pulse-seg.good{background:var(--green); opacity:0.55;}
+  .pulse-seg.neutral{background:#DAD5C6;}
+  .pulse-seg.weak{background:var(--red);}
+  .pulse-seg.current{outline:2.5px solid var(--navy); outline-offset:-2.5px;}
+  .pulse-ticks{display:flex; gap:2px; margin-top:5px;}
+  .pulse-ticks span{flex:1; text-align:center; font-family:'Roboto Mono',monospace; font-size:9px; color:var(--muted);}
+  .pulse-ticks span.current{color:var(--navy); font-weight:700;}
+
+  /* ---- next event ---- */
+  .event-card{display:flex; align-items:center; gap:13px;}
+  .event-icon{width:40px; height:40px; border-radius:10px; background:var(--gold-bg); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .event-body{flex:1;}
+  .event-title{font-size:14px; font-weight:600; color:var(--navy);}
+  .event-date{font-family:'Roboto Mono',monospace; font-size:11px; color:var(--muted); margin-top:2px;}
+  .event-countdown{font-family:'Roboto Mono',monospace; font-size:19px; font-weight:700; color:var(--gold); text-align:right;}
+  .event-countdown .u{display:block; font-size:9px; color:var(--muted); font-weight:400; text-transform:uppercase; letter-spacing:.05em; text-align:right;}
+
+  /* ---- pills ---- */
+  .pill-row{display:flex; gap:10px; margin-bottom:14px;}
+  .pill{flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px;}
+  .pill .pill-lbl{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; font-family:'Roboto Mono',monospace;}
+  .pill .pill-val{font-size:13px; font-weight:700;}
+  .pill.on-strong .pill-val{color:var(--green);}
+  .pill.on-weak .pill-val{color:var(--red);}
+
+  /* ---- implication / info list ---- */
+  .impl-item{display:flex; gap:11px; padding:11px 0; border-bottom:1px dashed var(--line);}
+  .impl-item:last-child{border-bottom:none; padding-bottom:0;}
+  .impl-dot{width:7px; height:7px; border-radius:50%; margin-top:6px; flex-shrink:0;}
+  .impl-text{font-size:13px; line-height:1.55; color:var(--ink);}
+  .impl-text b{color:var(--navy); font-weight:700;}
+
+  .rule-card{background:var(--gold-bg); border-color:#EAD9AE;}
+  .card-label{font-family:'Roboto Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:10px;}
+  .rule-card .card-label{color:#96772C;}
+
+  /* ---- month cards ---- */
+  .month-card{cursor:pointer;}
+  .mc-top{display:flex; justify-content:space-between; align-items:center;}
+  .mc-name{font-family:'Fraunces',serif; font-weight:700; font-size:17px; color:var(--navy);}
+  .mc-dot{width:8px; height:8px; border-radius:50%;}
+  .dot-strong{background:var(--green);}
+  .dot-good{background:var(--green); opacity:0.55;}
+  .dot-neutral{background:#B9B2A0;}
+  .dot-weak{background:var(--red);}
+  .mc-ret{font-family:'Roboto Mono',monospace; font-size:20px; font-weight:700; margin-top:8px;}
+  .c-strong{color:var(--green);}
+  .c-good{color:var(--green); opacity:0.85;}
+  .c-neutral{color:var(--muted);}
+  .c-weak{color:var(--red);}
+  .mc-pos{font-size:11px; color:var(--muted); margin-top:2px;}
+  .mc-detail{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--ink); line-height:1.55; display:none;}
+  .month-card.expanded .mc-detail{display:block;}
+  .month-card.today-flag::before{content:"MÊS ATUAL";}
+
+  .legend-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:6px; padding:12px 14px; background:#EFEBDF; border-radius:10px;}
+  .legend-item{display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--muted);}
+  .legend-dot{width:7px; height:7px; border-radius:50%;}
+
+  /* ---- timeline ---- */
+  .tl{position:relative; padding-left:22px;}
+  .tl::before{content:''; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--line);}
+  .tl-item{position:relative; padding-bottom:16px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-dot{position:absolute; left:-22px; top:3px; width:11px; height:11px; border-radius:50%; border:2px solid var(--paper); background:var(--gold);}
+  .tl-dot.rebalance{background:var(--navy);}
+  .tl-dot.seasonal{background:var(--green);}
+  .tl-dot.past{background:#C7C2B4;}
+  .tl-card.past{opacity:0.5;}
+  .tl-head{display:flex; justify-content:space-between; align-items:baseline;}
+  .tl-title{font-size:13.5px; font-weight:700; color:var(--navy);}
+  .tl-days{font-family:'Roboto Mono',monospace; font-size:11px; color:#96772C; font-weight:700;}
+  .tl-date{font-family:'Roboto Mono',monospace; font-size:11px; color:var(--muted); margin-top:3px;}
+  .tl-detail{font-size:12.5px; color:var(--ink); margin-top:7px; line-height:1.55;}
+
+  /* ---- glossary ---- */
+  .gloss-card{margin-bottom:10px;}
+  .gloss-term{font-family:'Fraunces',serif; font-weight:700; font-size:16px; color:var(--navy); margin-bottom:6px;}
+  .gloss-def{font-size:13px; color:var(--ink); line-height:1.6;}
+
+  /* ---- crises ---- */
+  .crisis-intro{font-size:13px; color:var(--ink); line-height:1.6;}
+  .crisis-card{margin-bottom:10px;}
+  .cc-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;}
+  .cc-name{font-family:'Fraunces',serif; font-weight:700; font-size:17px; color:var(--navy);}
+  .cc-month{font-family:'Roboto Mono',monospace; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .cc-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .cc-stat .num{font-family:'Roboto Mono',monospace; font-size:17px; font-weight:700; color:var(--red);}
+  .cc-stat .lbl{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:2px;}
+  .cc-cause{font-size:12.5px; color:var(--ink); line-height:1.55; margin-bottom:8px;}
+  .cc-lesson{font-size:12.5px; color:#96772C; background:var(--gold-bg); border-radius:8px; padding:9px 11px; line-height:1.5;}
+  .cc-lesson b{color:var(--navy);}
+
+  footer{
+    max-width:900px; margin:24px auto 0; padding:14px 20px 30px;
+    font-size:11.5px; color:var(--muted); line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <p class="eyebrow">Sazonalidade</p>
+  <h1>Sazonalidade dos Mercados</h1>
+  <p class="updated" id="updated-line"></p>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-view="resumo">Resumo</div>
+    <div class="tab" data-view="calendario">Calendário</div>
+    <div class="tab" data-view="eventos">Eventos</div>
+    <div class="tab" data-view="crises">Crises</div>
+    <div class="tab" data-view="glossario">Glossário</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- RESUMO -->
+  <section class="view active" id="view-resumo">
+    <div class="pulse-wrap">
+      <div class="pulse-label">Ano em curso</div>
+      <div class="pulse-bar" id="pulse-bar"></div>
+      <div class="pulse-ticks" id="pulse-ticks"></div>
+    </div>
+
+    <div class="card hero-card" id="hero-card"></div>
+    <div class="card event-card" id="next-event-card"></div>
+    <div class="pill-row" id="status-pills"></div>
+
+    <div class="card">
+      <div class="card-label">O que isto significa para a tua carteira</div>
+      <div id="impl-list"></div>
+    </div>
+
+    <div class="card rule-card">
+      <div class="card-label">Regra de ouro</div>
+      <div class="impl-text">Perder apenas os <b>10 melhores dias</b> do S&amp;P 500 nos últimos 30 anos corta o retorno a metade — e esses dias ocorrem frequentemente nos períodos mais voláteis, exatamente quando o impulso é sair do mercado.</div>
+    </div>
+  </section>
+
+  <!-- CALENDÁRIO -->
+  <section class="view" id="view-calendario">
+    <div class="group">
+      <p class="group-title">Retorno médio mensal <span class="count">12</span></p>
+      <p class="group-sub">S&amp;P 500, médias históricas desde 1950. Toca num mês para ver o detalhe.</p>
+      <div class="grid months" id="month-grid"></div>
+      <div class="legend-row">
+        <div class="legend-item"><span class="legend-dot dot-strong"></span>Muito bom</div>
+        <div class="legend-item"><span class="legend-dot dot-good"></span>Bom</div>
+        <div class="legend-item"><span class="legend-dot dot-neutral"></span>Neutro</div>
+        <div class="legend-item"><span class="legend-dot dot-weak"></span>Fraco</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-title">Padrões anuais</p>
+      <div class="card">
+        <div class="impl-item"><div class="impl-dot" style="background:var(--green)"></div><div class="impl-text"><b>Período forte — novembro a abril:</b> +7,2%/ano em média. Presente em mais de 90% dos mercados desenvolvidos.</div></div>
+        <div class="impl-item"><div class="impl-dot" style="background:var(--red)"></div><div class="impl-text"><b>Período fraco — maio a outubro:</b> +2,1%/ano em média. Volumes mais baixos, menos catalisadores.</div></div>
+        <div class="impl-item"><div class="impl-dot" style="background:var(--navy)"></div><div class="impl-text"><b>Ciclo presidencial dos EUA — 2026 é ano midterm:</b> historicamente o mais fraco dos quatro anos do ciclo. Cautela reforçada no verão, força esperada no outono pós-eleições.</div></div>
+        <div class="impl-item"><div class="impl-dot" style="background:var(--gold)"></div><div class="impl-text"><b>Barómetro de janeiro:</b> janeiro positivo → retorno anual médio de +17%. Janeiro negativo → retorno médio de -1,7%.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTOS -->
+  <section class="view" id="view-eventos">
+    <div class="group">
+      <p class="group-title">Linha do tempo <span class="count">2026</span></p>
+      <p class="group-sub">Triple Witching, rebalanceamentos de fim de trimestre e o Santa Claus Rally.</p>
+      <div class="tl" id="timeline"></div>
+    </div>
+  </section>
+
+  <!-- CRISES -->
+  <section class="view" id="view-crises">
+    <div class="group">
+      <p class="group-title">Histórico de crises</p>
+      <div class="card">
+        <div class="crisis-intro" id="crisis-intro"></div>
+      </div>
+      <div id="crisis-list"></div>
+    </div>
+  </section>
+
+  <!-- GLOSSÁRIO -->
+  <section class="view" id="view-glossario">
+    <div class="group">
+      <p class="group-title">O que significam estes termos</p>
+      <p class="group-sub">Explicações simples, sem jargão. Consulta sempre que precisares.</p>
+      <div id="glossario-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Dados de sazonalidade do S&amp;P 500 desde 1950 — médias históricas, não garantias. Trata estes padrões como contexto que inclina probabilidades, nunca como sinal isolado. "Time in the market beats timing the market." Isto não é aconselhamento de investimento.
+</footer>
+
+<script>
+const MONTHS = [
+  {name:"Janeiro", short:"JAN", ret:"+1,1%", pos:"~60%", rank:"Bom", cls:"good", note:"Efeito Janeiro: as small caps tendem a subir após o tax-loss selling de dezembro."},
+  {name:"Fevereiro", short:"FEV", ret:"+0,1%", pos:"~57%", rank:"Neutro", cls:"neutral", note:"Sem padrão dominante."},
+  {name:"Março", short:"MAR", ret:"+1,2%", pos:"~66%", rank:"Bom", cls:"good", note:"Início da época de resultados. Triple Witching a 20 — últimos 5 dias do trimestre com pressão vendedora institucional."},
+  {name:"Abril", short:"ABR", ret:"+1,5%", pos:"~70%", rank:"Muito bom", cls:"strong", note:"Resultados do 1º trimestre, entusiasmo de início de ano ainda prolongado."},
+  {name:"Maio", short:"MAI", ret:"+0,3%", pos:"~58%", rank:"Neutro", cls:"neutral", note:"Início do período mais fraco do ano — \u201cSell in May and go away\u201d."},
+  {name:"Junho", short:"JUN", ret:"+0,1%", pos:"~55%", rank:"Neutro", cls:"neutral", note:"Rebalanceamento de fim de semestre. Triple Witching a 18."},
+  {name:"Julho", short:"JUL", ret:"+1,7%", pos:"~80%", rank:"Melhor mês", cls:"strong", note:"Historicamente o melhor mês dos últimos 20 anos."},
+  {name:"Agosto", short:"AGO", ret:"+0,1%", pos:"~55%", rank:"Neutro", cls:"neutral", note:"Volumes baixos; a volatilidade pode surgir com pouco aviso."},
+  {name:"Setembro", short:"SET", ret:"-0,6%", pos:"~45%", rank:"Pior mês", cls:"weak", note:"Único mês com retorno médio negativo desde 1950. Triple Witching a 18. Historicamente, uma queda aqui é oportunidade, não motivo de pânico."},
+  {name:"Outubro", short:"OUT", ret:"+0,9%", pos:"~60%", rank:"Bom", cls:"good", note:"\u201cBear killer\u201d — muitos mercados baixistas terminaram neste mês."},
+  {name:"Novembro", short:"NOV", ret:"+1,5%", pos:"~68%", rank:"Muito bom", cls:"strong", note:"Início do período forte novembro → abril."},
+  {name:"Dezembro", short:"DEZ", ret:"+1,4%", pos:"~72%", rank:"Muito bom", cls:"strong", note:"Santa Claus Rally nos últimos dias. Triple Witching a 18. Window dressing institucional."}
+];
+
+const EVENTS_2026 = [
+  {date:"2026-03-20", title:"Triple Witching", type:"event", detail:"Expiração trimestral simultânea de opções e futuros — volatilidade mecânica elevada."},
+  {date:"2026-03-27", title:"Rebalanceamento fim Q1", type:"rebalance", detail:"Últimos 5 dias do trimestre — pressão vendedora se as ações subiram (fundos 60/40 ajustam ao peso-alvo)."},
+  {date:"2026-06-18", title:"Triple Witching", type:"event", detail:"Expiração trimestral simultânea de opções e futuros."},
+  {date:"2026-06-26", title:"Rebalanceamento fim Q2", type:"rebalance", detail:"Últimos 5 dias do trimestre."},
+  {date:"2026-09-18", title:"Triple Witching", type:"event", detail:"Coincide historicamente com o mês mais fraco do ano — atenção redobrada, não é sinal para vender."},
+  {date:"2026-09-25", title:"Rebalanceamento fim Q3", type:"rebalance", detail:"Últimos 5 dias do trimestre. Evitar retiradas extraordinárias nesta janela."},
+  {date:"2026-12-18", title:"Triple Witching", type:"event", detail:"Expiração trimestral simultânea de opções e futuros."},
+  {date:"2026-12-24", title:"Santa Claus Rally", type:"seasonal", detail:"Últimos 5 dias de dezembro + primeiros 2 de janeiro — positivo em ~78% dos anos, média histórica +1,3%."},
+  {date:"2026-12-29", title:"Rebalanceamento fim Q4", type:"rebalance", detail:"Últimos 5 dias do trimestre."}
+];
+
+const IMPLICATIONS = [
+  {c:"var(--green)", html:"<b>Entrada de capital em julho:</b> está bem calendarizada — é historicamente o melhor mês do ano."},
+  {c:"var(--red)", html:"<b>Retiradas anuais:</b> evitar setembro (único mês com retorno médio negativo) e semanas de Triple Witching. Preferir janeiro, março, abril, julho, novembro ou dezembro."},
+  {c:"var(--navy)", html:"<b>Sell in May:</b> com horizonte de 13 anos, sair em maio implica custos de transação, IRC adicional e risco de perder os melhores dias. Manter a carteira investida."},
+  {c:"var(--gold)", html:"<b>Setembro 2026:</b> se houver queda, não é momento para retiradas extraordinárias — é o momento para usar o IGLN como tampão, conforme o plano de investimento."},
+  {c:"var(--green)", html:"<b>Rebalanceamento pessoal:</b> se quiseres rever a alocação, fazê-lo em outubro ou novembro — após a pressão vendedora de setembro e antes do período forte de inverno."}
+];
+
+const GLOSSARIO = [
+  {term:"Triple Witching", def:"Dia em que expiram ao mesmo tempo três tipos de contratos: opções sobre ações, futuros sobre índices e opções sobre índices. Muitos investidores institucionais são obrigados a comprar ou vender grandes volumes só por causa desta expiração — não por nenhuma notícia sobre as empresas. Resultado: mais volatilidade nesse dia. Acontece 4 vezes por ano, sempre na 3ª sexta-feira de março, junho, setembro e dezembro."},
+  {term:"Rebalanceamento institucional", def:"Fundos de pensões e fundos mistos mantêm uma percentagem-alvo em ações e outra em obrigações. Se as ações subiram muito, o fundo fica com mais peso em ações do que devia — e vende uma parte para voltar ao equilíbrio. Cria pressão vendedora mecânica, sem relação com os resultados das empresas. Acontece nos últimos dias de cada trimestre."},
+  {term:"Window dressing", def:"Perto do fim do trimestre, alguns gestores de fundos compram as ações que mais subiram só para essas aparecerem na carteira que mostram aos clientes — dá a ideia de que \u201cescolheram bem\u201d, mesmo que a compra seja tardia."},
+  {term:"Sell in May and go away", def:"Ditado antigo que diz que os retornos entre maio e outubro tendem a ser mais fracos do que entre novembro e abril. É parcialmente verdadeiro nas médias históricas, mas não é forte o suficiente para justificar sair do mercado todos os anos — os custos de transação e o risco de perder bons dias normalmente compensam mais do que a vantagem."},
+  {term:"Santa Claus Rally", def:"Pequena subida que costuma acontecer nos últimos 5 dias do ano e nos primeiros 2 de janeiro. Associada a bónus de fim de ano reinvestidos e a otimismo de início de ano."},
+  {term:"Turn-of-the-month", def:"Tendência de os últimos dias do mês e os primeiros 3-4 dias do mês seguinte terem retornos ligeiramente acima da média — por causa de salários pagos e contribuições para planos de reforma que entram no mercado nessas alturas."},
+  {term:"Barómetro de janeiro", def:"Ideia de que \u201ccomo janeiro vai, assim vai o ano\u201d. Historicamente, quando janeiro é positivo, o retorno médio do ano inteiro ronda os +17%; quando é negativo, o ano tende a fechar perto de -1,7%. É um indicador estatístico, não uma garantia."},
+  {term:"Ciclo presidencial dos EUA", def:"Nos 4 anos de mandato presidencial norte-americano, o 2º ano — o \u201cano midterm\u201d, com eleições legislativas a meio do mandato — tende a ser historicamente o mais fraco da bolsa. 2026 é um ano midterm."},
+  {term:"0DTE (opções que expiram no próprio dia)", def:"Opções compradas e que expiram no mesmo dia. Já representam cerca de metade de todo o volume de opções negociadas sobre o S&P 500 — o que torna quase todas as tardes de negociação um pouco mais voláteis, não só os dias de Triple Witching."}
+];
+
+const CRISES = [
+  {name:"Crash de 1929", month:"Outubro 1929", drop:"-89%", recovery:"~25 anos", cause:"Anos de especulação em bolsa com dinheiro emprestado (compra a crédito). Quando os preços começaram a cair, todos tentaram vender ao mesmo tempo, o que agravou a queda — e a resposta política errada transformou-a na Grande Depressão.", lesson:"Dívida a financiar investimentos amplia os ganhos, mas também amplia as perdas de forma brutal. Nunca investir com dinheiro emprestado."},
+  {name:"Crise do petróleo (1973-74)", month:"Outubro 1973", drop:"-48%", recovery:"~6 anos", cause:"Países produtores de petróleo do Médio Oriente cortaram as exportações para os EUA, o preço do petróleo quadruplicou, e a inflação alta travou a economia mundial ao mesmo tempo (\u201cestagflação\u201d).", lesson:"Choques energéticos e geopolíticos podem durar anos, não semanas. Diversificação sectorial ajuda a amortecer este tipo de crise."},
+  {name:"Black Monday", month:"Outubro 1987", drop:"-22% (num só dia)", recovery:"~2 anos", cause:"Venda em cadeia despoletada por programas informáticos de negociação automática que reagiam uns aos outros, sem nenhuma notícia económica que justificasse a queda.", lesson:"A maior queda num único dia da história não teve uma causa económica real — foi mecânica. O mercado recuperou por completo em cerca de 2 anos."},
+  {name:"Rebentamento das dot-com", month:"Março 2000", drop:"-49%", recovery:"~7 anos", cause:"Empresas de internet sem lucros nem modelo de negócio validado foram compradas a preços astronómicos só pela promessa do futuro digital. Quando o dinheiro parou de entrar, a maioria destas empresas desapareceu.", lesson:"Pagar um preço demasiado alto por uma \u201chistória\u201d em vez de por resultados reais é o erro mais repetido em cada geração de investidores."},
+  {name:"Crise financeira global", month:"Setembro 2008", drop:"-57%", recovery:"~4-5 anos", cause:"Bancos venderam em massa créditos habitação de má qualidade (subprime), embrulhados como produtos financeiros \u201cseguros\u201d. Quando as famílias deixaram de pagar, o sistema bancário mundial quase colapsou.", lesson:"Quando um produto financeiro parece bom demais para ser verdade, normalmente é. Bancos e seguradoras sólidas (moat) sofrem menos nestas alturas."},
+  {name:"Crash da Covid-19", month:"Fevereiro-Março 2020", drop:"-34% em 33 dias", recovery:"~5 meses", cause:"O mundo parou à conta de uma pandemia — economias inteiras encerraram de um dia para o outro. Foi o bear market mais rápido da história.", lesson:"Também foi a recuperação mais rápida da história, graças à intervenção rápida dos bancos centrais. Vender no pânico nesta crise custou caro a quem o fez."}
+];
+
+const today = new Date();
+const todayMonthIdx = today.getMonth();
+
+function fmtDatePT(d){
+  const dias = ['dom','seg','ter','qua','qui','sex','sáb'];
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${dias[d.getDay()]}, ${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+document.getElementById('updated-line').textContent = fmtDatePT(today) + ' · S&P 500, médias desde 1950';
+
+// ---- Pulse bar ----
+const pulseBar = document.getElementById('pulse-bar');
+const pulseTicks = document.getElementById('pulse-ticks');
+MONTHS.forEach((m, i) => {
+  const seg = document.createElement('div');
+  seg.className = `pulse-seg ${m.cls}` + (i === todayMonthIdx ? ' current' : '');
+  pulseBar.appendChild(seg);
+  const tick = document.createElement('span');
+  tick.textContent = m.short[0];
+  if(i === todayMonthIdx) tick.className = 'current';
+  pulseTicks.appendChild(tick);
+});
+
+// ---- Hero card ----
+const cur = MONTHS[todayMonthIdx];
+const badgeCls = {strong:'badge-strong', good:'badge-good', neutral:'badge-neutral', weak:'badge-weak'}[cur.cls];
+const heroColor = {strong:'var(--green)', good:'var(--green)', neutral:'var(--ink)', weak:'var(--red)'}[cur.cls];
+document.getElementById('hero-card').innerHTML = `
+  <div class="hero-top">
+    <div class="hero-month">${cur.name}</div>
+    <div class="badge ${badgeCls}">${cur.rank}</div>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num" style="color:${heroColor}">${cur.ret}</div><div class="lbl">retorno médio</div></div>
+    <div class="hero-stat"><div class="num">${cur.pos}</div><div class="lbl">anos positivos</div></div>
+  </div>
+  <div class="hero-note">${cur.note}</div>
+`;
+
+// ---- Next event ----
+const upcoming = EVENTS_2026.map(e => ({...e, d: new Date(e.date + 'T00:00:00')})).filter(e => e.d >= new Date(today.toDateString()));
+const nextEvent = upcoming.sort((a,b) => a.d - b.d)[0];
+if(nextEvent){
+  const days = Math.round((nextEvent.d - new Date(today.toDateString())) / 86400000);
+  const iconMap = {event:'⚡', rebalance:'⚖️', seasonal:'🎄'};
+  document.getElementById('next-event-card').innerHTML = `
+    <div class="event-icon">${iconMap[nextEvent.type] || '📌'}</div>
+    <div class="event-body">
+      <div class="event-title">${nextEvent.title}</div>
+      <div class="event-date">${fmtDatePT(nextEvent.d)}</div>
+    </div>
+    <div class="event-countdown">${days}<span class="u">dias</span></div>
+  `;
+} else {
+  document.getElementById('next-event-card').innerHTML = `<div class="event-body"><div class="event-title">Sem mais eventos em 2026</div></div>`;
+}
+
+// ---- Status pills ----
+const strongPeriod = [10,11,0,1,2,3].includes(todayMonthIdx);
+document.getElementById('status-pills').innerHTML = `
+  <div class="pill ${strongPeriod ? 'on-strong' : 'on-weak'}">
+    <div class="pill-lbl">Período</div>
+    <div class="pill-val">${strongPeriod ? 'Forte (nov–abr)' : 'Fraco (mai–out)'}</div>
+  </div>
+  <div class="pill">
+    <div class="pill-lbl">Ciclo EUA 2026</div>
+    <div class="pill-val">Ano midterm</div>
+  </div>
+`;
+
+// ---- Implications ----
+document.getElementById('impl-list').innerHTML = IMPLICATIONS.map(i => `
+  <div class="impl-item">
+    <div class="impl-dot" style="background:${i.c}"></div>
+    <div class="impl-text">${i.html}</div>
+  </div>
+`).join('');
+
+// ---- Month grid ----
+const grid = document.getElementById('month-grid');
+MONTHS.forEach((m, i) => {
+  const card = document.createElement('div');
+  card.className = 'card month-card' + (i === todayMonthIdx ? ' today-flag' : '');
+  card.innerHTML = `
+    <div class="mc-top">
+      <span class="mc-name">${m.short}</span>
+      <span class="mc-dot dot-${m.cls}"></span>
+    </div>
+    <div class="mc-ret c-${m.cls}">${m.ret}</div>
+    <div class="mc-pos">${m.pos} dos anos</div>
+    <div class="mc-detail">${m.note}</div>
+  `;
+  card.addEventListener('click', () => card.classList.toggle('expanded'));
+  grid.appendChild(card);
+});
+
+// ---- Timeline ----
+const tl = document.getElementById('timeline');
+const todayMid = new Date(today.toDateString());
+EVENTS_2026.forEach(e => {
+  const d = new Date(e.date + 'T00:00:00');
+  const isPast = d < todayMid;
+  const days = Math.round((d - todayMid) / 86400000);
+  const item = document.createElement('div');
+  item.className = 'tl-item';
+  item.innerHTML = `
+    <div class="tl-dot ${isPast ? 'past' : e.type}"></div>
+    <div class="card tl-card ${isPast ? 'past' : ''}">
+      <div class="tl-head">
+        <span class="tl-title">${e.title}</span>
+        <span class="tl-days">${isPast ? 'passado' : `daqui a ${days}d`}</span>
+      </div>
+      <div class="tl-date">${fmtDatePT(d)}</div>
+      <div class="tl-detail">${e.detail}</div>
+    </div>
+  `;
+  tl.appendChild(item);
+});
+
+// ---- Crises ----
+document.getElementById('crisis-intro').innerHTML = `Das 6 maiores crises da bolsa americana desde 1929, <b>4 começaram em setembro ou outubro</b> — precisamente o período mais fraco do calendário sazonal. Isto não contradiz outubro ter, em média, retorno positivo: é positivo <i>apesar</i> de ser o mês mais instável, porque os rebounds fortes a seguir a um crash costumam acontecer ainda dentro do próprio mês. Serve de aviso, não de previsão — nem todo setembro fraco é uma crise, mas todas estas crises começaram num período estatisticamente fraco.`;
+document.getElementById('crisis-list').innerHTML = CRISES.map(c => `
+  <div class="card crisis-card">
+    <div class="cc-head">
+      <span class="cc-name">${c.name}</span>
+      <span class="cc-month">${c.month}</span>
+    </div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="num">${c.drop}</div><div class="lbl">queda máxima</div></div>
+      <div class="cc-stat"><div class="num" style="color:var(--navy)">${c.recovery}</div><div class="lbl">até recuperar</div></div>
+    </div>
+    <div class="cc-cause">${c.cause}</div>
+    <div class="cc-lesson"><b>Lição:</b> ${c.lesson}</div>
+  </div>
+`).join('');
+
+// ---- Glossário ----
+document.getElementById('glossario-list').innerHTML = GLOSSARIO.map(g => `
+  <div class="card gloss-card">
+    <div class="gloss-term">${g.term}</div>
+    <div class="gloss-def">${g.def}</div>
+  </div>
+`).join('');
+
+// ---- Tabs ----
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
